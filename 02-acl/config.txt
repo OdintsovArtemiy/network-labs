@@ -1,0 +1,17 @@
+! Задача: запретить доступ к серверу 192.168.1.10 из VLAN 20, но разрешить из VLAN 10
+
+! Настройка на роутере Cisco
+configure terminal
+
+! Создание ACL (Access Control List)
+access-list 100 deny ip 192.168.20.0 0.0.0.255 host 192.168.1.10
+access-list 100 permit ip any any
+
+! Применение к интерфейсу
+interface gigabitEthernet 0/1
+ ip access-group 100 in
+ exit
+
+! Проверка
+show access-lists
+show ip interface gigabitEthernet 0/1
