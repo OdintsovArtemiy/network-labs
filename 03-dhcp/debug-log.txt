@@ -1,0 +1,10 @@
+Диагностика DHCP:
+
+[ПК подключается к сети VLAN 10]
+
+*DHCP: Sending DHCPDISCOVER from interface FastEthernet 0/1
+*DHCP: DHCPOFFER from 192.168.10.1 (IP 192.168.10.15)
+*DHCP: DHCPREQUEST for 192.168.10.15
+*DHCP: DHCPACK from 192.168.10.1
+
+Итог: клиент получил IP 192.168.10.15
