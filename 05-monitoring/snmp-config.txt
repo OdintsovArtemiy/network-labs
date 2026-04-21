@@ -1,77 +1,57 @@
 ! ============================================
-! SNMPv3 Configuration на коммутаторе Cisco Catalyst 2960
-! Безопасная настройка с аутентификацией и шифрованием
+! SNMP конфигурация для мониторинга
+! Оборудование: Cisco / D-Link
+! Настроено в Ростелекоме (учебный стенд)
 ! ============================================
 
 enable
 configure terminal
 
 ! ============================================
-! 1. Настройка SNMPv3 пользователей (безопасный режим)
+! 1. Базовая настройка SNMP v2c (проще, но с community)
 ! ============================================
 
-! Создаём группу с аутентификацией и шифрованием
-snmp-server group INFRA-SECURITY v3 priv read infra-view write infra-edit
+! Community строки (как пароли)
+snmp-server community rostring RO
+snmp-server community rwstring RW
 
-! Создаём пользователя для Zabbix (с паролями)
-! auth sha: аутентификация через SHA
-! priv aes 128: шифрование через AES-128
-snmp-server user zabbix-user INFRA-SECURITY v3 auth sha ZabbixPass2024! priv aes 128 ZabbixCrypt2024!
-
-! Создаём пользователя для резервного копирования
-snmp-server user backup-user INFRA-SECURITY v3 auth sha BackupPass123! priv aes 128 BackupCrypt123!
+! Ограничиваем доступ только с IP мониторинга
+snmp-server community rostring RO 10
+snmp-server community rwstring RW 10
 
 ! ============================================
-! 2. Настройка прав доступа (views)
+! 2. Информация об устройстве (для Zabbix)
 ! ============================================
 
-! View для чтения инфраструктурных метрик
-snmp-server view infra-view iso included
-snmp-server view infra-view system included
-snmp-server view infra-view interfaces included
-snmp-server view infra-view ip included
-
-! View для изменения конфигурации (только для RW)
-snmp-server view infra-edit iso included
+snmp-server location Rack-02, Port-23
+snmp-server contact admin@rostelecom.ru
 
 ! ============================================
-! 3. Настройка SNMP traps (ловушек)
+! 3. Настройка SNMP traps (оповещения)
 ! ============================================
 
-! Адрес сервера мониторинга (Zabbix / SolarWinds)
-snmp-server host 10.10.10.100 version 3 priv zabbix-user
-snmp-server host 10.10.10.101 version 3 priv backup-user
+! Куда отправлять (IP Zabbix сервера)
+snmp-server host 192.168.1.100 rostring
 
-! Какие события отправлять
+! Какие события отслеживать
 snmp-server enable traps snmp authentication
 snmp-server enable traps cpu threshold
-snmp-server enable traps envmon temperature
-snmp-server enable traps envmon fan
-snmp-server enable traps envmon supply
 snmp-server enable traps interface link-down
-snmp-server enable traps vlancreate
-snmp-server enable traps vlandelete
+snmp-server enable traps config
 
 ! ============================================
-! 4. Ограничение доступа по ACL
+! 4. ACL для безопасности (только доверенные хосты)
 ! ============================================
 
-! Создаём ACL для SNMP (только доверенные хосты)
-access-list 99 remark SNMP_Allowed_Hosts
-access-list 99 permit 10.10.10.100
-access-list 99 permit 10.10.10.101
-access-list 99 permit 172.16.0.0 0.0.0.255
-access-list 99 deny any log
-
-! Применяем ACL к SNMP
-snmp-server community public RO 99
-snmp-server community private RW 99
+access-list 10 remark SNMP allowed hosts
+access-list 10 permit 192.168.1.100
+access-list 10 permit 10.10.0.0 0.0.0.255
+access-list 10 deny any log
 
 ! ============================================
-! 5. Проверка конфигурации
+! 5. Проверка (полезные команды)
 ! ============================================
-! show snmp group
-! show snmp user
-! show snmp view
+! show snmp community
 ! show snmp host
-! show access-list 99
+! show access-list 10
+! debug snmp packets (только при отладке)
