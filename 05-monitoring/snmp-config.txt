@@ -1,0 +1,77 @@
+! ============================================
+! SNMPv3 Configuration на коммутаторе Cisco Catalyst 2960
+! Безопасная настройка с аутентификацией и шифрованием
+! ============================================
+
+enable
+configure terminal
+
+! ============================================
+! 1. Настройка SNMPv3 пользователей (безопасный режим)
+! ============================================
+
+! Создаём группу с аутентификацией и шифрованием
+snmp-server group INFRA-SECURITY v3 priv read infra-view write infra-edit
+
+! Создаём пользователя для Zabbix (с паролями)
+! auth sha: аутентификация через SHA
+! priv aes 128: шифрование через AES-128
+snmp-server user zabbix-user INFRA-SECURITY v3 auth sha ZabbixPass2024! priv aes 128 ZabbixCrypt2024!
+
+! Создаём пользователя для резервного копирования
+snmp-server user backup-user INFRA-SECURITY v3 auth sha BackupPass123! priv aes 128 BackupCrypt123!
+
+! ============================================
+! 2. Настройка прав доступа (views)
+! ============================================
+
+! View для чтения инфраструктурных метрик
+snmp-server view infra-view iso included
+snmp-server view infra-view system included
+snmp-server view infra-view interfaces included
+snmp-server view infra-view ip included
+
+! View для изменения конфигурации (только для RW)
+snmp-server view infra-edit iso included
+
+! ============================================
+! 3. Настройка SNMP traps (ловушек)
+! ============================================
+
+! Адрес сервера мониторинга (Zabbix / SolarWinds)
+snmp-server host 10.10.10.100 version 3 priv zabbix-user
+snmp-server host 10.10.10.101 version 3 priv backup-user
+
+! Какие события отправлять
+snmp-server enable traps snmp authentication
+snmp-server enable traps cpu threshold
+snmp-server enable traps envmon temperature
+snmp-server enable traps envmon fan
+snmp-server enable traps envmon supply
+snmp-server enable traps interface link-down
+snmp-server enable traps vlancreate
+snmp-server enable traps vlandelete
+
+! ============================================
+! 4. Ограничение доступа по ACL
+! ============================================
+
+! Создаём ACL для SNMP (только доверенные хосты)
+access-list 99 remark SNMP_Allowed_Hosts
+access-list 99 permit 10.10.10.100
+access-list 99 permit 10.10.10.101
+access-list 99 permit 172.16.0.0 0.0.0.255
+access-list 99 deny any log
+
+! Применяем ACL к SNMP
+snmp-server community public RO 99
+snmp-server community private RW 99
+
+! ============================================
+! 5. Проверка конфигурации
+! ============================================
+! show snmp group
+! show snmp user
+! show snmp view
+! show snmp host
+! show access-list 99
