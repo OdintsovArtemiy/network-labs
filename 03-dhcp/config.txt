@@ -1,0 +1,24 @@
+! Настройка DHCP сервера на роутере Cisco
+
+configure terminal
+
+! Исключаем статические адреса (шлюз, DNS)
+ip dhcp excluded-address 192.168.1.1 192.168.1.10
+
+! Настраиваем пул для VLAN 10
+ip dhcp pool VLAN10_POOL
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 8.8.8.8 8.8.4.4
+ lease 7
+
+! Настраиваем пул для VLAN 20
+ip dhcp pool VLAN20_POOL
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.1
+ dns-server 8.8.8.8 8.8.4.4
+ lease 7
+
+! Проверка
+show ip dhcp binding
+show ip dhcp pool
