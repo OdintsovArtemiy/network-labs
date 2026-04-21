@@ -1,0 +1,17 @@
+! Настройка VLAN на D-Link DES-3528
+
+! Создание VLAN
+create vlan Sales tag 10
+create vlan Engineering tag 20
+
+! Назначение портов (untagged = access)
+config vlan Sales add untagged 1-2
+config vlan Engineering add untagged 3
+
+! Настройка trunk порта
+config vlan Sales add tagged 24
+config vlan Engineering add tagged 24
+
+! Проверка
+show vlan
+show vlan port 24
