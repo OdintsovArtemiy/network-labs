@@ -1,0 +1,43 @@
+! Настройка VLAN на коммутаторе Cisco
+
+! Вход в привилегированный режим
+enable
+configure terminal
+
+! Создание VLAN
+vlan 10
+ name Sales
+ exit
+
+vlan 20
+ name Engineering
+ exit
+
+! Назначение портов (access mode)
+interface fastEthernet 0/1
+ switchport mode access
+ switchport access vlan 10
+ exit
+
+interface fastEthernet 0/2
+ switchport mode access
+ switchport access vlan 10
+ exit
+
+interface fastEthernet 0/3
+ switchport mode access
+ switchport access vlan 20
+ exit
+
+! Настройка trunk порта (на роутер)
+interface fastEthernet 0/24
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20
+ exit
+
+! Сохранение конфигурации
+copy running-config startup-config
+
+! Проверка
+show vlan brief
+show interfaces trunk
